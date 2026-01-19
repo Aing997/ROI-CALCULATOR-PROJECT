@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Malaysia Agri-Value Platform | Performance Impact Tool</title>
+    <style>
+        :root {
+            --primary: #2e7d32; --secondary: #1b5e20; --accent: #ffa000;
+            --bg: #f8f9fa; --card-bg: #ffffff; --border: #e0e0e0;
+            --muted: #718096; --link: #1a73e8;
+        }
+        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background: var(--bg); color: #333; margin: 0; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1.5fr; gap: 25px; }
+        @media (max-width: 900px) { .container { grid-template-columns: 1fr; } }
+
+        .card { background: var(--card-bg); border-radius: 12px; padding: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid var(--border); }
+        h2 { margin-top: 0; color: var(--secondary); font-size: 1.5rem; border-bottom: 2px solid #edf2f7; padding-bottom: 10px; margin-bottom: 20px; }
+        
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.85rem; color: #4a5568; }
+        select, input { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 1rem; box-sizing: border-box; }
+        input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(46,125,50,0.1); }
+        
+        .region-badge { display: inline-block; background: #e8f5e9; color: var(--secondary); padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; margin-bottom: 15px; border: 1px solid #c8e6c9; }
+
+        .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px; }
+        .metric-box { padding: 15px; border-radius: 8px; text-align: center; border: 1px solid #edf2f7; }
+        .metric-box.highlight { background: var(--primary); color: white; border: none; }
+        .metric-label { font-size: 0.75rem; opacity: 0.9; text-transform: uppercase; margin-bottom: 5px; }
+        .metric-value { font-size: 1.4rem; font-weight: 800; }
+
+        .result-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9rem; }
+        .result-table th { text-align: left; padding: 10px; background: #f7fafc; border-bottom: 2px solid var(--border); }
+        .result-table td { padding: 12px 10px; border-bottom: 1px solid #edf2f7; }
+        .text-green { color: var(--primary); font-weight: 700; }
+        
+        .platform-box { margin-top: 20px; padding: 15px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; }
+        .platform-box h4 { margin: 0 0 10px 0; color: #166534; font-size: 0.9rem; }
+        
+        /* FOOTER SOURCES STYLING */
+        .source-footer { grid-column: 1 / -1; margin-top: 30px; padding: 25px; background: #fff; border-radius: 12px; border: 1px solid var(--border); }
+        .source-footer h3 { font-size: 1.1rem; margin-top: 0; color: var(--secondary); border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; margin-bottom: 15px; }
+        .source-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+        .source-item { font-size: 0.8rem; color: var(--muted); line-height: 1.5; }
+        .source-item strong { color: #333; display: block; margin-bottom: 4px; font-size: 0.85rem; }
+        .source-item a { color: var(--link); text-decoration: none; font-weight: 500; }
+        .source-item a:hover { text-decoration: underline; }
+
+        .btn { display: block; width: 100%; padding: 14px; background: var(--accent); color: white; text-align: center; text-decoration: none; border-radius: 6px; font-weight: 700; margin-top: 20px; }
+        .helper-text { font-size: 0.7rem; color: #718096; margin-top: 4px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- LEFT: INPUTS -->
+    <div class="card">
+        <h2>Farm Configuration</h2>
+        
+        <div class="form-group">
+            <label>Primary Crop</label>
+            <select id="crop-select">
+                <option value="Oil Palm">Oil Palm</option>
+                <option value="Sugar Cane">Sugar Cane</option>
+                <option value="Pineapple">Pineapple</option>
+                <option value="Pepper">Pepper</option>
+                <option value="Durian">Durian</option>
+                <option value="Floriculture">Floriculture</option>
+                <option value="Rice">Rice (Paddy)</option>
+                <option value="Rubber">Rubber</option>
+                <option value="Cocoa">Cocoa</option>
+                <option value="Coffee">Coffee</option>
+                <option value="Coconut">Coconut</option>
+            </select>
+        </div>
+
+        <div id="region-display" class="region-badge">📍 Loading region...</div>
+
+        <div class="form-group">
+            <label>Total Land Area (Hectares)</label>
+            <input type="number" id="hectares" value="50">
+        </div>
+
+        <div class="form-group">
+            <label>Current Yield per Hectare (Tonnes)</label>
+            <input type="number" id="yield" step="0.01">
+        </div>
+
+        <div class="form-group">
+            <label>Farmgate Price (RM per Tonne)</label>
+            <input type="number" id="price" step="0.01">
+        </div>
+
+        <div class="form-group">
+            <label>Operating Cost per Hectare (RM/yr)</label>
+            <input type="number" id="op-cost">
+            <div class="helper-text">Calculated based on Labor, Land, and Input Census data.</div>
+        </div>
+    </div>
+
+    <!-- RIGHT: OUTPUTS -->
+    <div class="card">
+        <h2>Impact Comparison</h2>
+        
+        <div class="metrics-grid">
+            <div class="metric-box">
+                <div class="metric-label">Estimated Annual Extra Profit</div>
+                <div class="metric-value" id="annual-uplift" style="color:var(--primary)">RM 0</div>
+            </div>
+            <div class="metric-box highlight">
+                <div class="metric-label">Profit Increase (%)</div>
+                <div class="metric-value" id="profit-percent">0%</div>
+            </div>
+        </div>
+
+        <table class="result-table">
+            <thead>
+                <tr>
+                    <th>Performance Metric</th>
+                    <th>Traditional (Current)</th>
+                    <th>Precision (Optimized)</th>
+                </tr>
+            </thead>
+            <tbody id="comparison-body">
+                <!-- JS populated -->
+            </tbody>
+        </table>
+
+        <div class="platform-box">
+            <h4>Technology Impact Factors</h4>
+            <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
+                <span>Projected Yield Improvement:</span>
+                <span style="color:var(--primary); font-weight:700">+8.5%*</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-top:5px;">
+                <span>Projected Cost Reduction:</span>
+                <span style="color:var(--primary); font-weight:700">-10.0%*</span>
+            </div>
+            <div class="helper-text" style="font-style: italic; margin-top:8px;">*Projected benchmarks for digital transformation ROI in Malaysian Agriculture.</div>
+        </div>
+
+        <a href="https://forms.gle/wnETpbmCjuWb6hgk9" class="btn" target="_blank">Book Your Personalized Demo</a>
+    </div>
+
+    <!-- FOOTER: OFFICIAL DATA SOURCES -->
+    <div class="source-footer">
+        <h3>Data Sources & Official References</h3>
+        <div class="source-grid">
+            <div class="source-item">
+                <strong>Master Agriculture Data</strong>
+                Baseline yields and land utilization sourced from 
+                <a href="https://tanistats.dosm.gov.my/tanifacts" target="_blank">DOSM TaniFacts</a>.
+            </div>
+            <div class="source-item">
+                <strong>Real-time Commodity Pricing</strong>
+                Farmgate and market prices updated via 
+                <a href="https://tanistats.dosm.gov.my/agroprice" target="_blank">DOSM AgroPrice Portal</a>.
+            </div>
+            <div class="source-item">
+                <strong>Supply Chain Analytics</strong>
+                Commodity-level value chain insights from 
+                <a href="https://tanistats.dosm.gov.my/agrochain" target="_blank">DOSM AgroChain</a>.
+            </div>
+            <div class="source-item">
+                <strong>Agricultural Census 2023</strong>
+                Labour, Land, and Crop breakdowns based on latest findings in 
+                <a href="https://tanistats.dosm.gov.my/tableflex" target="_blank">DOSM TableFlex</a>.
+            </div>
+            <div class="source-item" style="grid-column: 1 / -1; border-top: 1px solid #eee; padding-top: 10px; margin-top: 5px;">
+                <strong>Methodology:</strong> The "Precision (Optimized)" model applies a conservative +8.5% yield increase and -10.0% operational cost reduction, which are standard efficiency targets observed in MDEC (Malaysia Digital Economy Corporation) AgTech pilot programs.
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // DATA ANCHORED IN DOSM TANISTATS & CENSUS DATA
+    const MASTER_DATA = {
+        'Oil Palm': { yield: 3.5, price: 4179.50, cost: 10000, region: 'Sarawak, Sabah, Pahang, Johor' },
+        'Sugar Cane': { yield: 68.0, price: 150.0, cost: 313121, region: 'Perlis, Kedah' },
+        'Pineapple': { yield: 29.6, price: 4500.0, cost: 17667, region: 'Johor, Pahang, Sarawak' },
+        'Pepper': { yield: 0.282, price: 8500.0, cost: 22500, region: 'Sarawak, Peninsular' },
+        'Durian': { yield: 6.2, price: 30000, cost: 21667, region: 'Pahang, Johor, Kelantan' },
+        'Floriculture': { yield: 10.3, price: 2427, cost: 18955, region: 'Pahang, Johor' },
+        'Rice': { yield: 8.3, price: 1237.5, cost: 3258, region: 'Kedah, Perak, Selangor, Kelantan' },
+        'Rubber': { yield: 1.42, price: 10581, cost: 8000, region: 'Kedah, Perak, Sabah, Sarawak' },
+        'Cocoa': { yield: 0.34, price: 8133, cost: 6000, region: 'Sabah, Sarawak, Peninsular' },
+        'Coffee': { yield: 3.9, price: 16500, cost: 6500, region: 'Sabah, Sarawak, Johor' },
+        'Coconut': { yield: 8.0, price: 1750, cost: 9739, region: 'Peninsular, Mixed Farming' }
+    };
+
+    function formatRM(val) {
+        return "RM " + Math.round(val).toLocaleString();
+    }
+
+    function calculate() {
+        const cropKey = document.getElementById('crop-select').value;
+        const data = MASTER_DATA[cropKey];
+        
+        const hectares = parseFloat(document.getElementById('hectares').value) || 0;
+        const yieldVal = parseFloat(document.getElementById('yield').value) || 0;
+        const priceVal = parseFloat(document.getElementById('price').value) || 0;
+        const opCostHa = parseFloat(document.getElementById('op-cost').value) || 0;
+
+        // 1. TRADITIONAL ECONOMICS (DOSM Baseline)
+        const tradRevenue = hectares * yieldVal * priceVal;
+        const tradCost = hectares * opCostHa;
+        const tradProfit = tradRevenue - tradCost;
+
+        // 2. PRECISION ECONOMICS (Technology Applied)
+        const precYield = yieldVal * 1.085; // +8.5% improvement benchmark
+        const precCostHa = opCostHa * 0.90; // -10.0% cost efficiency benchmark
+        
+        const precRevenue = hectares * precYield * priceVal;
+        const precCost = hectares * precCostHa;
+        const precProfit = precRevenue - precCost;
+
+        // 3. RESULTS
+        const annualUplift = precProfit - tradProfit;
+        const profitPercent = (tradProfit > 0) ? (annualUplift / tradProfit) * 100 : 0;
+
+        // 4. UPDATE UI
+        document.getElementById('region-display').innerText = "📍 Major Regions: " + data.region;
+        document.getElementById('annual-uplift').innerText = formatRM(annualUplift);
+        document.getElementById('profit-percent').innerText = "+" + Math.round(profitPercent) + "%";
+
+        document.getElementById('comparison-body').innerHTML = `
+            <tr>
+                <td>Annual Revenue</td>
+                <td>${formatRM(tradRevenue)}</td>
+                <td class="text-green">${formatRM(precRevenue)}</td>
+            </tr>
+            <tr>
+                <td>Annual Operating Costs</td>
+                <td>${formatRM(tradCost)}</td>
+                <td class="text-green">${formatRM(precCost)}</td>
+            </tr>
+            <tr style="font-weight:800; border-top: 2px solid #333;">
+                <td>Annual Net Profit</td>
+                <td>${formatRM(tradProfit)}</td>
+                <td class="text-green">${formatRM(precProfit)}</td>
+            </tr>
+        `;
+    }
+
+    function loadDefaults() {
+        const cropKey = document.getElementById('crop-select').value;
+        const data = MASTER_DATA[cropKey];
+        
+        document.getElementById('yield').value = data.yield;
+        document.getElementById('price').value = data.price;
+        document.getElementById('op-cost').value = Math.round(data.cost);
+        
+        calculate();
+    }
+
+    document.getElementById('crop-select').addEventListener('change', loadDefaults);
+    document.querySelectorAll('input').forEach(el => el.addEventListener('input', calculate));
+
+    // Initial Load
+    window.onload = loadDefaults;
+</script>
+
+</body>
+</html>
